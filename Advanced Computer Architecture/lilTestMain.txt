@@ -1,0 +1,6 @@
+jmp main
+
+.include lilTest.txt
+
+.label main
+mul r2 r7 r8

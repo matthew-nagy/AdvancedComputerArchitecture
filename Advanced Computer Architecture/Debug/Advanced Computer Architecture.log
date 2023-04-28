@@ -1,0 +1,4 @@
+﻿  Source.cpp
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(51,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(79,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+  Advanced Computer Architecture.vcxproj -> C:\Users\mattt\Documents\Advanced Computer Architecture\Debug\Advanced Computer Architecture.exe
