@@ -13,6 +13,7 @@ struct PipelineEntry {
 	//Set when the instruction executes
 	word result;
 
+	PipelineEntry() = default;
 	PipelineEntry(int instructionAddress, int destination = -1):
 		instructionAddress(instructionAddress),
 		destination(destination)
@@ -21,13 +22,24 @@ struct PipelineEntry {
 	}
 
 	bool readyToExecute() {
-		return inputRobIndex1 != -1 && inputRobIndex2 != -1;
+		return inputRobIndex1 == -1 && inputRobIndex2 == -1;
+	}
+
+	void commonDataBus(word robIndex, word value) {
+		if (inputRobIndex1 == robIndex) {
+			inputRobIndex1 = -1;
+			sourceValue1 = value;
+		}
+		if (inputRobIndex2 == robIndex) {
+			inputRobIndex2 = -1;
+			sourceValue2 = value;
+		}
 	}
 };
 
 #include "BranchPredictor.h"
 
-word getResultOfOperation(BranchPredictor*, PipelineEntry&);
+word getResultOfOperation(BranchPredictor*, PipelineEntry&, std::vector<word>&, word*);
 
 class ExecutionUnit {
 public:
@@ -44,17 +56,28 @@ public:
 			currentCycles += 1;
 	}
 	bool hasFinishedExecuting() {
-		return currentCycles == cyclesToComplete;
+		return currentCycles == cyclesToComplete && !waiting;
 	}
 
-	PipelineEntry getCompletedEntry(BranchPredictor* branchPredictor) {
-		currentTask.result = getResultOfOperation(branchPredictor, currentTask);
+	std::optional<word> fetchReturnAddress() {
+		if (waiting == false && currentTask.opcode == Jlr)
+			return currentTask.instructionAddress;
+		return;
+	}
+
+	PipelineEntry getCompletedEntry(BranchPredictor* branchPredictor, std::vector<word>& registers, word* memory) {
+		currentTask.result = getResultOfOperation(branchPredictor, currentTask, registers, memory);
+		printf("Finished task %d %d %d %d\n", (int)currentTask.opcode, currentTask.destination, currentTask.sourceValue1, currentTask.sourceValue2);
 		waiting = true;
 		return currentTask;
 	}
 
-	bool flushEverything() {
+	void flushEverything() {
 		waiting = true;
+	}
+
+	int currrentCompleteCycles() {
+		return currentCycles;
 	}
 
 	ExecutionUnit(int cyclesToCompleteTask):

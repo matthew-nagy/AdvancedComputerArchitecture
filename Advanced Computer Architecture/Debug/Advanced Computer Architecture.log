@@ -1,4 +1,14 @@
 ﻿  Source.cpp
-C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(51,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
-C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(79,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(53,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\BranchPredictor.h(81,7): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\ReservationStation.h(76,53): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\ReservationStation.h(78,56): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\rob.h(110,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(185,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(187,11): warning C4018: '>=': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(188,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(195,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(196,69): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(213,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mattt\Documents\Advanced Computer Architecture\Advanced Computer Architecture\CPU.h(264,24): warning C4018: '<': signed/unsigned mismatch
   Advanced Computer Architecture.vcxproj -> C:\Users\mattt\Documents\Advanced Computer Architecture\Debug\Advanced Computer Architecture.exe

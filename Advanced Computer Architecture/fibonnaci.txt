@@ -1,0 +1,15 @@
+addi a1 zero 1
+addi a2 zero 2
+addi a3 zero 0
+addi a4 zero 20
+.label loopTop
+
+addi t0 a2 0
+add a2 a1 a2
+addi a1 t0 zero
+addi a3 a3 1
+bne loopTop a3 a4
+
+addi globalPointer zero 1
+.label Forever
+jmp Forever

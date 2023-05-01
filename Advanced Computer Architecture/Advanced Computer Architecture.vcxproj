@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -146,6 +146,8 @@
     <ClInclude Include="ExecutionGroup.h" />
     <ClInclude Include="ExecutionUnit.h" />
     <ClInclude Include="globalValues.h" />
+    <ClInclude Include="MattQueue.h" />
+    <ClInclude Include="operations.h" />
     <ClInclude Include="ReservationStation.h" />
     <ClInclude Include="riscv.h" />
     <ClInclude Include="rob.h" />
@@ -154,8 +156,12 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="Ackermann.txt" />
+    <Text Include="InstructionsTest.txt" />
     <Text Include="lilTest.txt" />
     <Text Include="lilTestMain.txt" />
+    <Text Include="fibonnaci.txt" />
+    <Text Include="VectorAdd.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

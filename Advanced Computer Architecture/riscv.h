@@ -6,13 +6,14 @@
 #include <fstream>
 #include <cstdio>
 #include<stdint.h>
+#include <optional>
 
 enum Opcode {
 	IAdd, IAnd, IOr, IXor, ISlt,
 	ILsl, ILsr,
 	Add, Sub, And, Or, Xor, Slt,
 	Lsl, Lsr,
-	Jmp, Jlr,
+	Jmp, Jlr, Rtl,
 	Beq, Bne, Blt, Bge,
 	Lda, Sta,
 	Mul, Div, Rem
@@ -36,7 +37,7 @@ namespace assembler {
 		("addi", IAdd)("andi", IAnd)("ori", IOr)("xori", IXor)("stli", ISlt)("lsli", ILsl)("lsri", ILsr)
 		("add", Add)("sub", Sub)("and", And)("or", Or)("xor", Xor)("stl", Slt)("lsl", Lsl)("lsr", Lsr)
 		("jmp", Jmp)("jlr", Jlr)("beq", Beq)("bne", Bne)("blt", Blt)("bge", Bge)("lda", Lda)("sta", Sta)
-		("mul", Mul)("div", Div)("rem", Rem)
+		("mul", Mul)("div", Div)("rem", Rem)("rtl", Rtl)
 		;
 }
 
@@ -70,15 +71,29 @@ namespace groups {
 	const std::unordered_set<Opcode> immediates = { IAdd, IAnd, IOr, IXor, ISlt, ILsl, ILsr };
 	const std::unordered_set<Opcode> simpleArithmetic = { IAdd, IAnd, IOr, IXor, ISlt, ILsl, ILsr, Add, Sub, And, Or, Xor, Slt, Lsl, Lsr};
 	const std::unordered_set<Opcode> conditionalBranches = { Beq, Bne, Blt, Bge };
-	const std::unordered_set<Opcode> jump = { Jmp, Jlr };
+	const std::unordered_set<Opcode> jump = { Jmp, Jlr, Rtl};
 	const std::unordered_set<Opcode> loads = { Lda };
 	const std::unordered_set<Opcode> stores = { Sta };
 	const std::unordered_set<Opcode> complexArithmetic = { Mul, Div, Rem };
+	const std::unordered_set<Opcode> sourceAdders = { Jmp, Jlr };
+
+	const std::unordered_map<std::string, std::string> originalMacros = assembler::MapBuilder<std::string, std::string>()
+		("zero", "r0")("ra", "r1")("returnAddress", "r1")("sp", "r2")
+		("stackPointer", "r2")("gp", "r3")("globalPointer", "r3")
+		("tp", "r4")("threadPointer", "r4")("t0", "r5")("t1", "r6")
+		("t2", "r7")("s0", "r8")("s1", "r8")("a0", "r9")("a1", "r10")
+		("a2", "r11")("a3", "r12")("a4", "r13")("a5", "r14")("a6", "r15")
+		("a7", "r16")("s2", "r18")("s3", "r19")("s4", "r20")("s5", "r21")
+		("s6", "r22")("s7", "r23")("s8", "r24")("s9", "r25")("s10", "r26")
+		("s11", "r27")("t3", "r28")("t4", "r29")("t5", "r30")("t6", "r31")
+		;
 }
 
 namespace assembler {
 
-	int parseOp(const std::unordered_map<std::string, int>& labels, const std::string& op) {
+	int parseOp(const std::unordered_map<std::string, int>& labels, const std::string& op, const std::unordered_map<std::string, std::string>& macros) {
+		if (macros.count(op) > 0)
+			return parseOp(labels, macros.at(op), macros);
 		if (labels.count(op) > 0)
 			return labels.at(op);
 		if (op[0] == 'r')
@@ -87,15 +102,20 @@ namespace assembler {
 	}
 
 	
-	Instruction parseRegularOp(std::unordered_map<std::string, int>& labels, const std::vector<std::string>& splits, int lineNumber, const std::string& filename) {
+	Instruction parseRegularOp(
+		std::unordered_map<std::string, int>& labels,
+		std::unordered_map<std::string, std::string>& macros,
+		const std::vector<std::string>& splits, 
+		int lineNumber, 
+		const std::string& filename) {
 		Instruction i(opMappings.at(splits[0]));
 
 		if (splits.size() > 1) {
-			i.destination = parseOp(labels, splits[1]);
+			i.destination = parseOp(labels, splits[1], macros);
 			if (splits.size() > 2) {
-				i.source1 = parseOp(labels, splits[2]);
+				i.source1 = parseOp(labels, splits[2], macros);
 				if (splits.size() > 3) {
-					i.source2 = parseOp(labels, splits[3]);
+					i.source2 = parseOp(labels, splits[3], macros);
 					if (splits.size() > 4) {
 						printf("Cannot parse file %s line %d; too many things (from %s)\n", filename.c_str(), lineNumber, splits[4].c_str());
 						throw(0);
@@ -199,6 +219,7 @@ namespace assembler {
 
 	CompileResult compile(std::string filename, int memorySize) {
 		std::vector<ParsedInstruction> parsedInstructions;
+		std::unordered_map<std::string, std::string> macros = groups::originalMacros;
 		CompileResult result;
 		result.memory = new word[memorySize];
 		ParseMemory mem;
@@ -208,7 +229,7 @@ namespace assembler {
 		parseFile(parsedInstructions, filename, result.labels, mem);
 
 		for (auto& pi : parsedInstructions)
-			result.instructions.emplace_back(parseRegularOp(result.labels, pi.splits, pi.lineNumber, pi.filename));
+			result.instructions.emplace_back(parseRegularOp(result.labels, macros, pi.splits, pi.lineNumber, pi.filename));
 
 		return result;
 	}

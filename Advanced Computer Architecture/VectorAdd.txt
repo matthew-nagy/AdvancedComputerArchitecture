@@ -1,0 +1,19 @@
+.data data1 236 951 932 211 002 721 924 427 611 413 081 162 331 444 712 925 176 736 765
+.data data2 346 613 925 012 253 765 333 261 010 280 323 927 439 910 021 320 120 990 901
+.data answer 0
+
+#length 19
+
+addi a1 zero 0
+addi a2 zero 18
+.label LoopTop
+lda t1 a1 data1
+lda t2 a1 data2
+add t3 t1 t2
+sta answer a1 t3
+addi a1 a1 1
+bne LoopTop a1 a2
+
+addi globalPointer zero 1
+.label Forever
+jmp Forever

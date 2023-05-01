@@ -26,6 +26,8 @@ public:
 			return destination > currentPC;
 		case Mode::AlwaysBackwards:
 			return destination < currentPC;
+		default:
+			throw(0);
 		}
 	}
 

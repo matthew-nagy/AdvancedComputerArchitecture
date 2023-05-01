@@ -42,6 +42,12 @@
     <ClInclude Include="ExecutionGroup.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="operations.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MattQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -53,6 +59,18 @@
       <Filter>Source Files\assembly</Filter>
     </Text>
     <Text Include="lilTestMain.txt">
+      <Filter>Source Files\assembly</Filter>
+    </Text>
+    <Text Include="InstructionsTest.txt">
+      <Filter>Source Files\assembly</Filter>
+    </Text>
+    <Text Include="Ackermann.txt">
+      <Filter>Source Files\assembly</Filter>
+    </Text>
+    <Text Include="VectorAdd.txt">
+      <Filter>Source Files\assembly</Filter>
+    </Text>
+    <Text Include="fibonnaci.txt">
       <Filter>Source Files\assembly</Filter>
     </Text>
   </ItemGroup>

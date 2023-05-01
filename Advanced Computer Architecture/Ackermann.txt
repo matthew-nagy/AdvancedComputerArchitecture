@@ -1,0 +1,11 @@
+
+#Arguments are in a1, a2
+#Return is in a0
+.label ackermann
+bne mNotZero a1 0
+addi a0 a2 1
+
+.label mNotZero
+bne neitherZero a2 0
+
+.label neitherZero
