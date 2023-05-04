@@ -21,7 +21,7 @@ public:
 			eu.flushEverything();
 	}
 
-	std::vector<PipelineEntry> update(BranchPredictor* branchPredictor, std::vector<word>& registers, word* memory) {
+	std::vector<PipelineEntry> update(BranchPredictor* branchPredictor, std::vector<word>& registers, std::vector<word>& memory) {
 		updateReservationStations();
 		return updateEUs(branchPredictor, registers, memory);
 	}
@@ -67,7 +67,7 @@ private:
 			}
 		}
 	}
-	std::vector<PipelineEntry> updateEUs(BranchPredictor* branchPredictor, std::vector<word>& registers, word* memory) {
+	std::vector<PipelineEntry> updateEUs(BranchPredictor* branchPredictor, std::vector<word>& registers, std::vector<word>& memory) {
 		std::vector<PipelineEntry> finished;
 		for (auto& eu : eus) {
 			eu.update();

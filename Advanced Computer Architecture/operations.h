@@ -68,7 +68,7 @@ word getConditionalBranch(BranchPredictor* b, PipelineEntry& e) {
 	return taken ? 1 : 0;
 }
 
-word getResultOfOperation(BranchPredictor* b, PipelineEntry& e, std::vector<word>& registers, word* memory) {
+word getResultOfOperation(BranchPredictor* b, PipelineEntry& e, std::vector<word>& registers, std::vector<word>& memory) {
 	if (groups::simpleArithmetic.count(e.opcode) > 0)
 		return getSimpleArithmetic(b, e);
 	if (groups::conditionalBranches.count(e.opcode) > 0)
@@ -79,7 +79,7 @@ word getResultOfOperation(BranchPredictor* b, PipelineEntry& e, std::vector<word
 		return e.sourceValue2;
 	}
 	if (groups::jump.count(e.opcode) > 0)
-		return 1;//Always succeeded in jumping
+		return e.opcode == Jlr ? e.instructionAddress : 1;//Always succeeded in jumping
 	if (groups::loads.count(e.opcode) > 0)
 		return memory[e.sourceValue1 + e.sourceValue2];
 	if (groups::sourceAdders.count(e.opcode) > 0)

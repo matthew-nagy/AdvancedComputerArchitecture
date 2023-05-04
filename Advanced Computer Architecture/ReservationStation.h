@@ -61,7 +61,7 @@ public:
 		for (auto& e : entries)
 			if (e.opcode == Jlr)
 				return e.instructionAddress;
-		return;
+		return std::nullopt;
 	}
 
 	ReservationStation(int capacity) :
@@ -136,7 +136,7 @@ public:
 	}
 
 	std::optional<word> getReturnAddress() {
-		return;
+		return std::nullopt;
 	}
 
 	LoadStoreQueue(int capacity):

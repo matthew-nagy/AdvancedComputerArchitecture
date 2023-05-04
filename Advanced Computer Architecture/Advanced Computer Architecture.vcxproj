@@ -157,10 +157,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Ackermann.txt" />
-    <Text Include="InstructionsTest.txt" />
-    <Text Include="lilTest.txt" />
-    <Text Include="lilTestMain.txt" />
+    <Text Include="colatz.txt" />
     <Text Include="fibonnaci.txt" />
+    <Text Include="powerConfig.txt" />
+    <Text Include="test_grounds.txt" />
     <Text Include="VectorAdd.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

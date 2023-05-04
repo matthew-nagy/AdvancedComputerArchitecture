@@ -1,11 +1,41 @@
+addi stackPointer zero 1024
+jmp main
+
+
+.label mNotZero
+bne neitherZero a2 0
+addi a2 zero 1
+addi a1 a1 -1
+#No need to return; just jump and let the other one return
+jmp ackermann
 
 #Arguments are in a1, a2
 #Return is in a0
 .label ackermann
 bne mNotZero a1 0
 addi a0 a2 1
-
-.label mNotZero
-bne neitherZero a2 0
+rtl
 
 .label neitherZero
+addi stackPointer stackPointer -2
+sta 1 stackPointer a1
+sta 0 stackPointer returnAddress
+addi a2 a2 -1
+jlr ackermann
+lda a1 stackPointer 1
+addi a2 a0 0
+lda returnAddress stackPointer 0
+addi a1 a1 -1
+addi stackPointer stackPointer 2
+jmp ackermann
+
+
+.label main
+addi a1 zero 2
+addi a2 zero 4
+jlr ackermann
+
+addi globalPointer zero 1
+
+.label forever
+jmp forever

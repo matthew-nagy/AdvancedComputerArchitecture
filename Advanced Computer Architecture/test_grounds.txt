@@ -1,0 +1,14 @@
+
+addi a0 zero 1
+
+addi a2 zero 100
+jlr OtherSet
+
+addi a4 zero 100
+addi globalPointer zero 1
+.label forever
+jmp forever
+
+.label OtherSet
+addi a3 zero 69
+rtl

@@ -1,0 +1,5 @@
+width 3
+alu 3 3 1
+calu 3 3 4
+bu 3 3 2
+lsu 3 3 3

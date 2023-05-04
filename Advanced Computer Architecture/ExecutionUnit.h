@@ -39,7 +39,7 @@ struct PipelineEntry {
 
 #include "BranchPredictor.h"
 
-word getResultOfOperation(BranchPredictor*, PipelineEntry&, std::vector<word>&, word*);
+word getResultOfOperation(BranchPredictor*, PipelineEntry&, std::vector<word>&, std::vector<word>&);
 
 class ExecutionUnit {
 public:
@@ -62,12 +62,12 @@ public:
 	std::optional<word> fetchReturnAddress() {
 		if (waiting == false && currentTask.opcode == Jlr)
 			return currentTask.instructionAddress;
-		return;
+		return std::nullopt;
 	}
 
-	PipelineEntry getCompletedEntry(BranchPredictor* branchPredictor, std::vector<word>& registers, word* memory) {
+	PipelineEntry getCompletedEntry(BranchPredictor* branchPredictor, std::vector<word>& registers, std::vector<word>& memory) {
 		currentTask.result = getResultOfOperation(branchPredictor, currentTask, registers, memory);
-		printf("Finished task %d %d %d %d\n", (int)currentTask.opcode, currentTask.destination, currentTask.sourceValue1, currentTask.sourceValue2);
+		//printf("Finished task %d %d %d %d\n", (int)currentTask.opcode, currentTask.destination, currentTask.sourceValue1, currentTask.sourceValue2);
 		waiting = true;
 		return currentTask;
 	}

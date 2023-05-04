@@ -60,7 +60,8 @@ private:
 class TwoBitBranchPredictor final: public BranchPredictor {
 public:
 	bool predictJump(int currentPC, int)final override {
-		return maskedPrediction[currentPC & mask] > 1;
+		bool prediction = maskedPrediction[currentPC & mask] > 1;
+		return prediction;
 	}
 
 	void reportResult(bool correct, int instructionAddress)final override {

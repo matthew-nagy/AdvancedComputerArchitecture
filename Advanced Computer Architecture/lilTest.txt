@@ -1,6 +1,0 @@
-.data funConstants 413 612 69420 3816
-.data somethingElse 692
-
-.label notMain
-addi r5 r3 32
-lda r6 r0 somethingElse

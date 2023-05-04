@@ -81,9 +81,9 @@ namespace groups {
 		("zero", "r0")("ra", "r1")("returnAddress", "r1")("sp", "r2")
 		("stackPointer", "r2")("gp", "r3")("globalPointer", "r3")
 		("tp", "r4")("threadPointer", "r4")("t0", "r5")("t1", "r6")
-		("t2", "r7")("s0", "r8")("s1", "r8")("a0", "r9")("a1", "r10")
-		("a2", "r11")("a3", "r12")("a4", "r13")("a5", "r14")("a6", "r15")
-		("a7", "r16")("s2", "r18")("s3", "r19")("s4", "r20")("s5", "r21")
+		("t2", "r7")("s0", "r8")("s1", "r9")("a0", "r10")("a1", "r11")
+		("a2", "r12")("a3", "r13")("a4", "r14")("a5", "r15")("a6", "r16")
+		("a7", "r17")("s2", "r18")("s3", "r19")("s4", "r20")("s5", "r21")
 		("s6", "r22")("s7", "r23")("s8", "r24")("s9", "r25")("s10", "r26")
 		("s11", "r27")("t3", "r28")("t4", "r29")("t5", "r30")("t6", "r31")
 		;
@@ -156,22 +156,21 @@ namespace assembler {
 	}
 
 	struct ParseMemory {
-		word* memory;
+		std::vector<word>* memory;
 		int currentIndex = 0;
 
 		void write(word value) {
-			memory[currentIndex] = value;
+			(*memory)[currentIndex] = value;
 			currentIndex += 1;
 		}
 	};
 
 	bool c_prettyPrint = false;
 
-	void parseFile(std::vector<ParsedInstruction>& parsedInstructions, std::string filename, std::unordered_map<std::string, int>& labels, ParseMemory& memory) {
+	void parseFile(std::vector<ParsedInstruction>& parsedInstructions, std::string filename, std::unordered_map<std::string, int>& labels, ParseMemory& memory, std::unordered_map<std::string, std::string>& macros) {
 		std::ifstream file(filename);
 		std::string line;
 		int lineNum = -1;
-		printf(":)\n");
 		if (!file.is_open()) {
 			printf("File %s is bad\n", filename.c_str());
 		}
@@ -195,7 +194,10 @@ namespace assembler {
 						memory.write(std::atoi(splits[i].c_str()));
 				}
 				else if (splits[0] == ".include") {
-					parseFile(parsedInstructions, splits[1], labels, memory);
+					parseFile(parsedInstructions, splits[1], labels, memory, macros);
+				}
+				else if (splits[0] == ".macro") {
+					macros.emplace(splits[1], splits[2]);
 				}
 				else {
 					printf("Filename %s, line %d, Unknown macro '%s'\n", filename.c_str(), lineNum, line.c_str());
@@ -213,7 +215,7 @@ namespace assembler {
 
 	struct CompileResult {
 		std::vector<Instruction> instructions;
-		word* memory;
+		std::vector<word> memory;
 		std::unordered_map<std::string, int> labels;
 	};
 
@@ -221,12 +223,12 @@ namespace assembler {
 		std::vector<ParsedInstruction> parsedInstructions;
 		std::unordered_map<std::string, std::string> macros = groups::originalMacros;
 		CompileResult result;
-		result.memory = new word[memorySize];
+		result.memory = std::vector<word>(memorySize);
 		ParseMemory mem;
-		mem.memory = result.memory;
+		mem.memory = &result.memory;
 		mem.currentIndex = 0;
 
-		parseFile(parsedInstructions, filename, result.labels, mem);
+		parseFile(parsedInstructions, filename, result.labels, mem, macros);
 
 		for (auto& pi : parsedInstructions)
 			result.instructions.emplace_back(parseRegularOp(result.labels, macros, pi.splits, pi.lineNumber, pi.filename));

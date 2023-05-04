@@ -6,6 +6,7 @@
 #include "ExecutionGroup.h"
 #include "operations.h"
 #include <queue>
+#include <iostream>
 
 std::vector<PipelineEntry> operator+(std::vector<PipelineEntry> left, const std::vector<PipelineEntry>& right) {
 	left.insert(left.end(), right.begin(), right.end());
@@ -16,6 +17,8 @@ std::vector<PipelineEntry> operator+(std::vector<PipelineEntry> left, const std:
 
 class CPU {
 public:
+	int commited = 0;
+	int flushes = 0;
 
 	void update() {
 		commit();
@@ -64,25 +67,16 @@ public:
 
 		auto result = assembler::compile(filename, GlobalData::memorySize);
 		instructions = std::move(result.instructions);
-		memory = result.memory;
+		memory = std::move(result.memory);
 		labels = result.labels;
 	}
 
 private:
-	struct BranchHistory {
-		int pcIfPoorlyPredicted;
-		bool branchPredicted;
-		BranchHistory(int pcIfPoorlyPredicted, bool branchPredicted):
-			pcIfPoorlyPredicted(pcIfPoorlyPredicted),
-			branchPredicted(branchPredicted)
-		{}
-	};
 
 	std::vector<Instruction> instructions;
 	std::unordered_map<std::string, int> labels;
 	int pc;
-	std::queue<BranchHistory> branchHistory;
-	word* memory;
+	std::vector<word> memory;
 	std::vector<word> registers;
 	ReOrderBuffer rob;
 	BranchPredictor* branchPredictor;
@@ -107,10 +101,15 @@ private:
 	void getRobIndexOrRegisterValue(word& robIndex, word& source, word requestedReg) {
 		if (requestedReg == 0) {
 			source = 0;
+			return;
 		}
 		word neccessaryRobIndex = rob.getRobOrMinus(
 			[](RobEntry& entry, word requestedReg) {
-				return entry.type == InstructionType::RegisterOp && entry.desination == requestedReg && entry.active == true;
+				return (entry.type == InstructionType::RegisterOp && entry.desination == requestedReg && entry.active == true)
+					|| (
+						entry.instruction.operation == Jlr && requestedReg == 1 && entry.active
+						)
+					;
 			}, requestedReg);
 		if (neccessaryRobIndex == -1)
 			source = registers[requestedReg];
@@ -131,6 +130,9 @@ private:
 		auto possibleRA = eu_branches.getReturnAddress();
 		if (possibleRA.has_value())
 			return *possibleRA;
+		auto& head = rob.head();
+		if (head.ready && head.active && head.desination == 1 && head.type == InstructionType::RegisterOp)
+			return head.valueField;
 		return registers[1];
 	}
 
@@ -153,22 +155,30 @@ private:
 		RobEntry newEntry(getRobType(fetchedInstruction.operation));
 		newEntry.desination = fetchedInstruction.destination;
 		newEntry.instruction = fetchedInstruction;
+		newEntry.instructionIndex = pc;
 
-		if (groups::jump.count(fetchedInstruction.operation) > 0) {
+		if (fetchedInstruction.operation == Rtl) {
+			newEntry.valueField = 1;
+			pc = fetchLastReturnAddress();
+		}
+		else if (groups::jump.count(fetchedInstruction.operation) > 0) {
 			pipelinedInstruction.destination = pipelinedInstruction.instructionAddress;
+			if (fetchedInstruction.operation == Jlr) newEntry.valueField = pc;
+			else newEntry.valueField = 1;//Always taken, so it was correct
 			pc = fetchedInstruction.destination;
-			newEntry.valueField = 1;//Always taken, so it was correct
 		}
 		else if (groups::conditionalBranches.count(fetchedInstruction.operation) > 0) {
 			getRobIndexOrRegisterValue(pipelinedInstruction.inputRobIndex1, pipelinedInstruction.sourceValue1, fetchedInstruction.source1);
 			getRobIndexOrRegisterValue(pipelinedInstruction.inputRobIndex2, pipelinedInstruction.sourceValue2, fetchedInstruction.source2);
 
 			if (branchPredictor->predictJump(pc - 1, fetchedInstruction.destination)) {
-				branchHistory.emplace(pc, true);
+				newEntry.pcIfBadlyPredicted = pc;
+				newEntry.predictedToJump = true;
 				pc = fetchedInstruction.destination;
 			}
 			else {
-				branchHistory.emplace(fetchedInstruction.destination, false);
+				newEntry.pcIfBadlyPredicted = fetchedInstruction.destination;
+				newEntry.predictedToJump = false;
 			}
 		}
 		else if (groups::immediates.count(fetchedInstruction.operation) > 0) {
@@ -187,8 +197,8 @@ private:
 			pipelinedInstruction.sourceValue2 = fetchedInstruction.source2;
 		}
 		else if(groups::stores.count(fetchedInstruction.operation) > 0){
-			pipelinedInstruction.sourceValue1 = fetchedInstruction.source1;
 			getRobIndexOrRegisterValue(pipelinedInstruction.inputRobIndex2, pipelinedInstruction.sourceValue2, fetchedInstruction.source2);
+			getRobIndexOrRegisterValue(pipelinedInstruction.inputRobIndex1, pipelinedInstruction.sourceValue1, fetchedInstruction.source1);
 		}
 
 		pipelinedInstruction.outputRobIndex = rob.push(newEntry);
@@ -268,7 +278,7 @@ private:
 			rob[fVal.outputRobIndex].ready = true;
 			rob[fVal.outputRobIndex].valueField = fVal.result;
 			if (groups::stores.count(fVal.opcode) > 0) {
-				rob[fVal.outputRobIndex].desination = fVal.destination + registers[fVal.sourceValue1];
+				rob[fVal.outputRobIndex].desination = fVal.destination + fVal.sourceValue1;// registers[fVal.sourceValue1];
 				rob[fVal.outputRobIndex].valueField = fVal.sourceValue2;
 			}
 		}
@@ -280,8 +290,17 @@ private:
 			if (rob.head().ready) {
 				auto result = rob.head().commit(memory, registers);
 				auto popped = rob.pop();
-				if (result == CommitResult::FlushEverything) {
-					flushEverything();
+				commited += 1;
+				if (result == CommitResult::FlushEverything && popped.predictedToJump) {
+					flushEverything(popped.pcIfBadlyPredicted);
+					return;
+				}
+				else if (popped.predictedToJump == false && result == CommitResult::BranchCorrect) {
+					flushEverything(popped.pcIfBadlyPredicted);
+					return;
+				}
+				else if (result == CommitResult::BranchCorrect) {
+					//branchHistory.pop();
 					return;
 				}
 			}
@@ -289,7 +308,9 @@ private:
 		}
 	}
 
-	void flushEverything() {
+
+	void flushEverything(int newPC) {
+		flushes += 1;
 		rob.flushEverything();
 		eu_simpleArthmatic.flushEverything();
 		eu_complexArithmatic.flushEverything();
@@ -297,8 +318,7 @@ private:
 		eu_branches.flushEverything();
 		while (fetchedInstructions.size() > 0)fetchedInstructions.pop();
 		while (decodedInstructions.size() > 0)decodedInstructions.pop();
-		auto fix = branchHistory.front();
-		pc = fix.pcIfPoorlyPredicted;
-		while (branchHistory.size() > 0)branchHistory.pop();
+		//auto fix = branchHistory.front();
+		pc = newPC;
 	}
 };

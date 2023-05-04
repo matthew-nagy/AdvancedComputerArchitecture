@@ -7,7 +7,7 @@ enum class InstructionType {
 };
 
 enum class CommitResult {
-	Complete, BranchCorrect, FlushEverything
+	Complete, BranchCorrect, FlushEverything, Jumped
 };
 
 struct RobEntry {
@@ -17,6 +17,9 @@ struct RobEntry {
 	word valueField;
 	bool ready = false;
 	bool active = false;
+
+	int pcIfBadlyPredicted;
+	bool predictedToJump;
 
 	Instruction instruction = Instruction(Add);
 	int instructionIndex = -1;//Used for return address bodging
@@ -30,13 +33,15 @@ struct RobEntry {
 		desination = valueField = ready = 0;
 	}
 
-	CommitResult commit(word* memory, std::vector<word>& registers) {
+	CommitResult commit(std::vector<word>& memory, std::vector<word>& registers) {
 		switch (type)
 		{
 		case InstructionType::Branch:
 			if (valueField > 0) {
 				if (instruction.operation == Jlr)
 					registers[1] = instructionIndex;
+				if (groups::jump.count(instruction.operation))
+					return CommitResult::Jumped;
 				return CommitResult::BranchCorrect;
 			}
 			return CommitResult::FlushEverything;
